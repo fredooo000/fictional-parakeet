@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Methods Archive</title>
+  <meta name="description" content="Searchable archive of methods with popups." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#080a0b; --panel:#0f1214; --panel-2:#0b0e10; --text:#e9f7ef; --muted:#a9b9b1; --brand:#00ff80;
+      --shadow: 0 14px 50px rgba(0,0,0,.45); --radius:16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body { font-family: Inter, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(0,255,128,.08), transparent 60%),
+                 radial-gradient(900px 500px at 100% 10%, rgba(0,255,128,.06), transparent 60%), var(--bg);
+      color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+    .nav { position:sticky; top:0; z-index:50; backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(8,10,11,.75), rgba(8,10,11,.55));
+      border-bottom:1px solid rgba(255,255,255,.06); }
+    .nav-inner { max-width:1200px; margin:0 auto; padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px }
+    .brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text) }
+    .logo { width:36px; height:36px; border-radius:10px;
+      background: conic-gradient(from 210deg, rgba(0,255,128,.9), rgba(0,255,128,.25) 45%, rgba(0,0,0,.2) 60%, rgba(0,255,128,.6) 100%);
+      box-shadow: 0 0 0 2px rgba(0,255,128,.15), 0 12px 28px rgba(0,255,128,.18); }
+    .brand span { font-weight:800; letter-spacing:.3px }
+    .search { flex:1; max-width:560px; display:flex; gap:10px }
+    .search input { flex:1; padding:12px 14px; border-radius:var(--radius); border:1px solid rgba(255,255,255,.1);
+      background:var(--panel-2); color:var(--text); font-size:1rem; font-family: 'Share Tech Mono', monospace; }
+    .hero { max-width:1200px; margin:0 auto; padding:42px 20px }
+    .headline { background: linear-gradient(180deg, #fff, #caffea 70%);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      font-size: clamp(28px, 5vw, 48px); font-weight:800; text-shadow: 0 6px 40px rgba(0,255,128,.18); margin-bottom:10px; }
+    .sub { color:var(--muted); font-size:1.02rem; margin-bottom:22px }
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .card-btn { background: var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius);
+      padding:14px; box-shadow: var(--shadow); cursor:pointer; transition:.2s; text-align:left; }
+    .card-btn:hover { transform:translateY(-2px); border-color: rgba(0,255,128,.35); }
+    .card-title { font-weight:700; line-height:1.25 }
+    .muted { color:var(--muted); font-size:.9rem; margin-top:6px }
+    .count { color:var(--muted); font-size:.9rem }
+    footer { margin-top:auto; padding:20px; text-align:center; color:var(--muted); border-top:1px solid rgba(255,255,255,.06) }
+    .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; padding:20px; }
+    .modal { width:min(900px, 100%); background:var(--panel); border:1px solid rgba(255,255,255,.1); border-radius:20px; box-shadow: var(--shadow);
+      overflow:hidden; transform: translateY(8px); opacity:0; transition:.2s; }
+    .modal.show { transform: translateY(0); opacity:1 }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:16px 18px; background:linear-gradient(180deg, rgba(0,255,128,.08), transparent) }
+    .modal-title { font-weight:800 }
+    .modal-actions { display:flex; gap:8px; align-items:center }
+    .btn { background:linear-gradient(90deg, var(--brand), #6affb9); color:#0b1310; font-weight:800;
+      border:none; border-radius:12px; padding:10px 14px; cursor:pointer }
+    .btn.secondary { background: var(--panel-2); color: var(--text); border:1px solid rgba(255,255,255,.12) }
+    .modal-body { padding:18px; max-height:70vh; overflow:auto; }
+    pre { white-space:pre-wrap; word-wrap:break-word; line-height:1.55; font-family:'Share Tech Mono', monospace }
+    .hidden { display:none }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#"><div class="logo"></div><span>Methods Archive</span></a>
+      <div class="search">
+        <input id="searchInput" type="text" placeholder="Search methods… (type to filter)">
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <section class="hero">
+    <h1 class="headline">Browse All Methods</h1>
+    <p class="sub">Click a card to open the full instructions in a popup. Use search to filter by name. You can delete or edit files in the <code>methods/</code> folder to remove or update items.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <div id="backdrop" class="modal-backdrop">
+    <div id="modal" class="modal">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">Method</div>
+        <div class="modal-actions">
+          <button id="copyBtn" class="btn secondary">Copy</button>
+          <button id="closeBtn" class="btn">Close</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <pre id="modalContent">Loading…</pre>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2025 Methods Archive</footer>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const searchInput = document.getElementById('searchInput');
+    const count = document.getElementById('count');
+    const backdrop = document.getElementById('backdrop');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const closeBtn = document.getElementById('closeBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let items = [];
+    let filtered = [];
+
+    async function loadManifest() {
+      const res = await fetch('methods/index.json'); // ✅ fixed path
+      items = await res.json();
+      filtered = items;
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = '';
+      const q = searchInput.value.trim().toLowerCase();
+      filtered = items.filter(it => it.title.toLowerCase().includes(q));
+      count.textContent = filtered.length + ' of ' + items.length;
+      for (const it of filtered) {
+        const btn = document.createElement('button');
+        btn.className = 'card-btn';
+        btn.innerHTML = `<div class="card-title">${it.title}</div>
+                         <div class="muted">${it.original_filename || ''}</div>`;
+        btn.addEventListener('click', () => openItem(it));
+        grid.appendChild(btn);
+      }
+    }
+
+    async function openItem(it) {
+      modalTitle.textContent = it.title;
+      modalContent.textContent = 'Loading…';
+      showModal();
+      try {
+        const res = await fetch(it.file);
+        const text = await res.text();
+        modalContent.textContent = text;
+      } catch (e) {
+        modalContent.textContent = 'Failed to load file: ' + e;
+      }
+    }
+
+    function showModal() {
+      backdrop.style.display = 'flex';
+      requestAnimationFrame(() => modal.classList.add('show'));
+    }
+    function hideModal() {
+      modal.classList.remove('show');
+      setTimeout(() => backdrop.style.display = 'none', 180);
+    }
+    closeBtn.addEventListener('click', hideModal);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) hideModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(modalContent.textContent).then(() => {
+        copyBtn.textContent = 'Copied';
+        setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+      });
+    });
+    searchInput.addEventListener('input', render);
+    loadManifest();
+  </script>
+</body>
+</html>
